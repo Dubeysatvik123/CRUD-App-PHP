@@ -1,53 +1,49 @@
-
 pipeline {
     agent any
- 
+
     environment {
-        // Docker Hub image name 
-        DOCKER_IMAGE = 'satvikdubey268/crud-php-app'
+        DOCKER_IMAGE = credentials('docker-image')
+        APP_SERVER_IP = credentials('app-server-ip')
         DOCKER_TAG = "${BUILD_NUMBER}"
-        // App Server IP 
-        APP_SERVER_IP = '3.237.37.60'
     }
- 
+
     stages {
- 
+
         stage('Checkout') {
             steps {
-                echo 'Stage 1: Pulling code from GitHub...'
+                echo 'Pulling code from GitHub'
                 checkout scm
-                sh 'ls -la'
             }
         }
- 
+
         stage('Build Docker Image') {
             steps {
-                echo 'Stage 2: Building Docker image...'
+                echo 'Building Docker image'
                 sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
                 sh 'docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest'
-                sh 'docker images | grep crud-php-app'
             }
         }
- 
+
         stage('Push to Docker Hub') {
             steps {
-                echo 'Stage 3: Pushing image to Docker Hub...'
+                echo 'Pushing image to DockerHub'
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push ${DOCKER_IMAGE}:${DOCKER_TAG}'
-                    sh 'docker push ${DOCKER_IMAGE}:latest'
-                    sh 'docker logout'
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker push ${DOCKER_IMAGE}:latest
+                    docker logout
+                    '''
                 }
             }
         }
- 
-        stage('Deploy to App Server') {
+
+        stage('Deploy to EC2') {
             steps {
-                echo 'Stage 4: Deploying to App Server...'
                 withCredentials([
                     sshUserPrivateKey(
                         credentialsId: 'app-server-ssh',
@@ -59,52 +55,36 @@ pipeline {
                     string(credentialsId: 'DB_NAME', variable: 'DB_NAME')
                 ]) {
                     sh '''
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${APP_SERVER_IP} '
-                            # Pull latest image
-                            docker pull ''' + env.DOCKER_IMAGE + ''':latest
- 
-                            # Stop and remove old container (ignore errors if not running)
-                            docker stop crud-app || true
-                            docker rm crud-app || true
- 
-                            # Run new container with RDS env vars
-                            docker run -d \\
-                                --name crud-app \\
-                                --restart unless-stopped \\
-                                -p 80:80 \\
-                                -e DB_HOST=''' + env.DB_HOST + ''' \\
-                                -e DB_USER=''' + env.DB_USER + ''' \\
-                                -e DB_PASS=''' + env.DB_PASS + ''' \\
-                                -e DB_NAME=''' + env.DB_NAME + ''' \\
-                                ''' + env.DOCKER_IMAGE + ''':latest
- 
-                            # Verify container is running
-                            docker ps | grep crud-app
-                        '
+                    ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${APP_SERVER_IP} "
+
+                        docker pull ${DOCKER_IMAGE}:latest
+
+                        docker stop crud-app || true
+                        docker rm crud-app || true
+
+                        docker run -d \
+                        --name crud-app \
+                        -p 80:80 \
+                        -e DB_HOST=$DB_HOST \
+                        -e DB_USER=$DB_USER \
+                        -e DB_PASS=$DB_PASS \
+                        -e DB_NAME=$DB_NAME \
+                        ${DOCKER_IMAGE}:latest
+
+                        docker ps
+                    "
                     '''
                 }
             }
         }
- 
-        stage('Verify Deployment') {
-            steps {
-                echo 'Stage 5: Verifying deployment...'
-                sh "curl -s -o /dev/null -w '%{http_code}' http://${APP_SERVER_IP} | grep -E '200|301|302'"
-                echo 'Deployment successful!'
-            }
-        }
     }
- 
+
     post {
         success {
-            echo 'Pipeline completed successfully! App deployed.'
+            echo 'Deployment Successful'
         }
         failure {
-            echo 'Pipeline FAILED. Check logs above.'
-        }
-        always {
-            // Clean up local Docker images to save space
-            sh 'docker image prune -f || true'
+            echo 'Pipeline Failed'
         }
     }
 }
