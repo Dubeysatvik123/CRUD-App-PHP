@@ -4,10 +4,10 @@ pipeline {
  
     environment {
         // Docker Hub image name 
-        DOCKER_IMAGE = 'DOCKERHUB_USERNAME/crud-php-app'
+        DOCKER_IMAGE = 'satvikdubey268/crud-php-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
         // App Server IP 
-        APP_SERVER_IP = '18.x.x.x'
+        APP_SERVER_IP = '3.237.37.60'
     }
  
     stages {
