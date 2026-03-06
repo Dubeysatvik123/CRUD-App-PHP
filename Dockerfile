@@ -10,3 +10,6 @@ RUN chown -R www-data:www-data /var/www/html
 EXPOSE 80
 #passing the default command
 CMD ["apache2-foreground"]
+
+
+
