@@ -1,98 +1,78 @@
-# PHP CRUD Application
+# PHP CRUD Application – DevOps CI/CD Deployment
 
-A simple web application demonstrating Create, Read, Update, and Delete (CRUD) operations using PHP and MySQL. This project features a responsive design with Bootstrap 5 and includes basic form validation.
+This project demonstrates a complete **DevOps CI/CD pipeline** for deploying a Dockerized PHP CRUD application using **GitHub, Jenkins, Docker, AWS EC2, and AWS RDS MySQL**.
 
-## Features
+The pipeline automatically builds, pushes, and deploys the application whenever code changes are pushed to the repository.
 
-- **Create:** Add new users with name, gender, email, mobile number, and address.
-- **Read:** View a list of all users in a responsive 
-- **Update:** Edit user information.
-- **Delete:** Remove a user from the database.
-- **Validation:** Basic validation for form inputs.
+---
 
-  
+# Project Architecture
 
-## Technologies Used
+The application is deployed using a CI/CD pipeline with the following components:
 
-- PHP
-- MySQL
-- JavaScript
-- Bootstrap 5
-- Font Awesome
+- GitHub – Source code repository
+- Jenkins – CI/CD automation server
+- Docker – Containerization platform
+- Docker Hub – Container registry
+- AWS EC2 – Application and Jenkins servers
+- AWS RDS MySQL – Managed database service
 
+### Architecture Workflow
 
-### Installation
+1. Developer pushes code to GitHub.
+2. Jenkins detects changes via webhook.
+3. Jenkins pulls the repository and builds a Docker image.
+4. The Docker image is pushed to Docker Hub.
+5. Jenkins connects to the Application EC2 server via SSH.
+6. The application server pulls the latest Docker image.
+7. Docker container starts the PHP application.
+8. The application connects to the RDS MySQL database.
 
-- **Clone the repository:**
+---
 
-   ```bash
-   git clone https://github.com/yourusername/php-crud-application.git
-   cd php-crud-application
-   ```
+# Infrastructure Setup
 
-- **Import the database:**
+## AWS EC2 Instances
 
-  Import the **`database.sql`** file into your MySQL database.
+### Jenkins Server
+Instance Type: `t2.small`
 
+Ports Allowed:
+- 22 (SSH)
+- 8080 (Jenkins)
+- 443 (HTTPS)
 
-- **Configure the database connection:**
-  
-  Update the **`connect.php`** file with your database credentials:
+Installed Software:
+- Docker
+- Jenkins
+- OpenJDK 21
 
-  ```
-  <?php
-  $host = "localhost";
-  $username = "root";
-  $password = ""; // Update if you have a password set
-  $database = "crud";
-  
-  $conn = mysqli_connect($host, $username, $password, $database);
-  
-  if (!$conn) {
-      die("Error in connection" . mysqli_connect_error());
-  }
-  ?>
-  ```
+### Application Server
+Instance Type: `t2.micro`
 
-- **Run the application:**
-  Start your web server and navigate to the project directory in your browser. For example, if you are using Apache, you       might go to **http://localhost/php-crud-application.**
+Ports Allowed:
+- 22 (SSH)
+- 80 (HTTP)
+- 443 (HTTPS)
 
+Installed Software:
+- Docker
+- Apache Web Server
 
+---
 
-## Usage
+# Database Setup
 
-- Click on the "**New users**" button to open a modal and add a new user.
-- Use the **edit** and **delete** icons to update or remove users.
-- **Success** and **error** messages will be displayed based on the operation performed.
+Database hosted on **AWS RDS MySQL**
 
-## Screenshots
+Configuration:
 
-  Home page
-  
-  <img width="959" alt="Screenshot 2024-07-24 211803" src="https://github.com/user-attachments/assets/f0600ad2-d5c4-4c58-af03-e69f3f65cb3f">
+| Parameter | Value |
+|----------|------|
+DB Identifier | crud-app-db
+Engine | MySQL Community
+Instance Type | db.t4g.micro
+Connections | Only allowed from Application EC2
+Port | 3306
 
-
-  New user
-  
-  <img width="959" alt="Screenshot 2024-07-24 204136" src="https://github.com/user-attachments/assets/605eb930-0494-4eea-b7bc-9e0b200e5dc1">
-
-
-  Insert Message
-  
-  <img width="959" alt="Screenshot 2024-07-24 204214" src="https://github.com/user-attachments/assets/ecadb624-220a-454d-9126-4e949030b365">
-
-
-  Update
-  
-  <img width="959" alt="Screenshot 2024-07-24 204308" src="https://github.com/user-attachments/assets/550ac174-cf3a-4bf7-a396-141d3f11e8b9">
-
-
-  Delete
-  
-  <img width="959" alt="Screenshot 2024-07-24 204234" src="https://github.com/user-attachments/assets/487b098e-a02f-47b0-b132-fbd2cbe99aa9">
-
-
-  
-
-
-
+Database created:
