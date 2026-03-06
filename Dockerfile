@@ -2,7 +2,6 @@
 FROM php:8.1-apache
 #Installing dependencies
 RUN docker-php-ext-install mysqli
-RUN a2enmod rewrite
 #copying the assets
 COPY . /var/www/html
 #ownership to default apache user
