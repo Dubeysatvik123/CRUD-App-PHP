@@ -5,7 +5,7 @@ A simple web application demonstrating Create, Read, Update, and Delete (CRUD) o
 ## Features
 
 - **Create:** Add new users with name, gender, email, mobile number, and address.
-- **Read:** View a list of all users in a responsive table.
+- **Read:** View a list of all users in a responsive 
 - **Update:** Edit user information.
 - **Delete:** Remove a user from the database.
 - **Validation:** Basic validation for form inputs.
